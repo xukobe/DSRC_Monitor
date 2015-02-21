@@ -23,7 +23,7 @@ class DsrcClient(gr.basic_block):
         self.set_msg_handler(pmt.intern('send in'),self.handle_msg)
         self.client = SocketClient(self._recv_callback)
         print "Connecting to "+IP+":"+str(port)
-        self.client.connect(IP,port)
+        self.client.connect(IP, port)
         self.client.start()
         print "Connected"
 
@@ -82,12 +82,12 @@ class DsrcServer(gr.basic_block):
         print "Connected"
 
     def _recv_callback(self, msg):
-        rev_msg = pmt.symbol_to_string(msg)
+        # rev_msg = pmt.symbol_to_string(msg)
         # send_pmt = pmt.make_u8vector(len(rev_msg), ord(' '))
         # for i in range(len(rev_msg)):
         #     pmt.u8vector_set(send_pmt, i, ord(rev_msg[i]))
         # self.message_port_pub(pmt.intern('received out'), pmt.cons(pmt.PMT_NIL, send_pmt))
-        self.message_port_pub(pmt.intern('received out'), pmt.string_to_symbol(rev_msg))
+        self.message_port_pub(pmt.intern('received out'), pmt.string_to_symbol(msg))
         # print msg
 
     def handle_msg(self, msg_pmt):
