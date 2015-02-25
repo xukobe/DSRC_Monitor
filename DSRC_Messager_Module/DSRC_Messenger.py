@@ -57,6 +57,7 @@ class SocketClient(threading.Thread):
                     read_len = PACKET_LEN
                     msg = ''
             except Exception, e:
+                print e
                 print "A Client disconnected!"
                 break
 
