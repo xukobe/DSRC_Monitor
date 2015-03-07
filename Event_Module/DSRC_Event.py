@@ -9,16 +9,29 @@ TYPE_MONITOR_CAR = "monitor_car"
 TYPE_CAR_CAR = "car_car"
 TYPE_CUSTOMIZED = "customized"
 
+###################SubType####################
+SUBTYPE_SETTING = "setting"
+SUBTYPE_BATCH = "batch"
+SUBTYPE_CMD = "cmd"
+
 ################Monitor_Car##################
 SETTINGS_NAME_STYLE = "style"
 SETTINGS_NAME_STYLE_FOLLOW = "follow"
 SETTINGS_NAME_STYLE_LEAD = "lead"
 SETTINGS_NAME_STYLE_FREE = "free"
+SETTINGS_NAME_MINI_INTERVAL = 'mini_interval'
 
 COMMAND_NAME_SAFE_MODE = "safe_mode"
 COMMAND_NAME_FULL_MODE = "full_mode"
 COMMAND_NAME_RESTART = "restart"
 COMMAND_NAME_SHUT_DOWN = "shutdown"
+COMMAND_NAME_GO = 'go'
+COMMAND_NAME_GO_TO = 'go_to'
+COMMAND_NAME_PLUGIN = 'plugin'
+COMMAND_NAME_STOP = 'stop'
+COMMAND_NAME_ASK_PLUGIN = 'ask_plugin'
+COMMAND_NAME_RESPONSE_PLUGIN = 'response_plugin'
+COMMAND_NAME_DISABLE_PLUGIN = 'disable_plugin'
 
 BATCH_FLOW_START = "start"
 BATCH_FLOW_JOB = "job"
@@ -31,10 +44,10 @@ ACTION_NAME_GO = "go"
 ACTION_NAME_PAUSE = "pause"
 
 class EventAction:
-    def __init__(self):
-        self.name = None
-        self.arg1 = None
-        self.arg2 = None
+    def __init__(self, name=None, arg1=None, arg2=None):
+        self.name = name
+        self.arg1 = arg1
+        self.arg2 = arg2
 
     def set_name(self, name):
         self.name = name
@@ -63,16 +76,18 @@ class EventCoordinates:
 
 
 class EventJob:
-    def __init__(self):
-        self.action = None
-        self.time = 0
+    def __init__(self, name=None, arg1=None, arg2=None, time=0):
+        self.action = EventAction(name, arg1, arg2)
+        self.time = time
 
     def set_action(self, action):
         """
         :param action: Event action
         :type action: EventAction
         """
-        self.action = action
+        self.action.name = action.name
+        self.action.arg1 = action.arg1
+        self.action.arg2 = action.arg2
 
     def set_time(self, time):
         self.time = time
@@ -99,6 +114,23 @@ class Event:
 
     def self_parse(self):
         raise "Not implemented!"
+
+
+class EventSetting:
+    def __init__(self, name=None, value=None):
+        self.name = name
+        self.value = value
+
+
+class EventCommand:
+    def __init__(self, name=None, args=None):
+        self.name = name
+        self.args = args
+
+
+class EventBatch:
+    def __init__(self, name=None, arg1=None, arg2=None, time=None):
+        self.job = EventJob(name, arg1, arg2, time)
 
 
 class Car_CarEvent(Event):
@@ -139,9 +171,27 @@ class Car_CarEvent(Event):
 class Monitor_CarEvent(Event):
     def __init__(self):
         Event.__init__(self)
+        self.sub_type = None
+        self.setting = None
+        self.command = None
+        self.batch = None
 
     def self_parse(self):
-        print "Monitor_car event parse!"
+        if self.msg_obj:
+            monitor_car_obj = self.msg_obj[TYPE_MONITOR_CAR]
+            self.sub_type = self.msg_obj['subtype']
+            if self.sub_type == SUBTYPE_SETTING:
+                setting_obj = monitor_car_obj['setting']
+                self.setting = EventSetting(setting_obj['name'], setting_obj['value'])
+            elif self.sub_type == SUBTYPE_CMD:
+                cmd_obj = monitor_car_obj['cmd']
+                self.command = EventCommand(cmd_obj['name'], cmd_obj['args'])
+            elif self.sub_type == SUBTYPE_BATCH:
+                batch_obj = monitor_car_obj['batch']
+                job_obj = batch_obj['job']
+                action_obj = job_obj['action']
+                time = job_obj['time']
+                self.batch = EventBatch(action_obj['name'], action_obj['arg1'], action_obj['arg2'], time)
 
 class EventGenerator:
     def __init__(self):

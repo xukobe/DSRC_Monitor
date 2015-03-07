@@ -15,7 +15,7 @@ class MessageCoder:
         return json_obj
 
     @staticmethod
-    def encode( msg_obj):
+    def encode(msg_obj):
         msg = json.dumps(msg_obj)
         return msg
 
@@ -37,6 +37,60 @@ class MessageCoder:
         msg_obj_car['action'] = msg_obj_action
         msg_obj_car['coor'] = msg_obj_coor
         msg_obj['car_car'] = msg_obj_car
+        msg = MessageCoder.encode(msg_obj)
+        return msg
+
+    @staticmethod
+    def generate_setting_message(source, destination, setting_name, value):
+        msg_obj = {}
+        msg_obj['source'] = source
+        msg_obj['destination'] = destination
+        msg_obj['type'] = DSRC_Event.TYPE_MONITOR_CAR
+        msg_obj['subtype'] = DSRC_Event.SUBTYPE_SETTING
+        msg_obj_monitor_car = {}
+        msg_obj_setting = {}
+        msg_obj_setting['name'] = setting_name
+        msg_obj_setting['value'] = value
+        msg_obj_monitor_car['setting'] = msg_obj_setting
+        msg_obj['monitor_car'] = msg_obj_monitor_car
+        msg = MessageCoder.encode(msg_obj)
+        return msg
+
+    @staticmethod
+    def generate_command_message(source, destination, cmd, args):
+        msg_obj = {}
+        msg_obj['source'] = source
+        msg_obj['destination'] = destination
+        msg_obj['type'] = DSRC_Event.TYPE_MONITOR_CAR
+        msg_obj['subtype'] = DSRC_Event.SUBTYPE_CMD
+        msg_obj_monitor_car = {}
+        msg_obj_cmd = {}
+        msg_obj_cmd['name'] = cmd
+        msg_obj_cmd['args'] = args
+        msg_obj_monitor_car['cmd'] = msg_obj_cmd
+        msg_obj['monitor_car'] = msg_obj_monitor_car
+        msg = MessageCoder.encode(msg_obj)
+        return msg
+
+    @staticmethod
+    def generate_batch_processing(source, destination, job):
+        msg_obj = {}
+        msg_obj['source'] = source
+        msg_obj['destination'] = destination
+        msg_obj['type'] = DSRC_Event.TYPE_MONITOR_CAR
+        msg_obj['subtype'] = DSRC_Event.SUBTYPE_BATCH
+        msg_obj_monitor_car = {}
+        msg_obj_batch = {}
+        msg_obj_job = {}
+        msg_obj_action = {}
+        msg_obj_action['name'] = job.action.name
+        msg_obj_action['arg1'] = job.action.arg1
+        msg_obj_action['arg2'] = job.action.arg2
+        msg_obj_job['action'] = msg_obj_action
+        msg_obj_job['time'] = job.time
+        msg_obj_batch['job'] = msg_obj_job
+        msg_obj_monitor_car['batch'] = msg_obj_batch
+        msg_obj['monitor_car'] = msg_obj_monitor_car
         msg = MessageCoder.encode(msg_obj)
         return msg
 

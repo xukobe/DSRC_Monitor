@@ -5,6 +5,8 @@ from threading import Thread
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
+import time
+
 from Queue import Queue
 from Event_Module.DSRC_Event import Event
 from Event_Module import DSRC_Event
@@ -13,33 +15,77 @@ from Event_Module.DSRC_Message_Coder import MessageCoder
 from PyQt4 import QtGui, QtCore
 
 
-class Context:
+class Context(QtCore.QObject):
+
     def __init__(self):
+        super(Context, self).__init__()
         self.connector = DsrcUSRPConnector()
-        self.event_generator = EventGenerator()
-        self.event_generator.connect_to_event_signal(event_handler)
-        self.connector.register_listener(self.event_generator)
+        self.msg_handler = MessageHandler()
+        self.connect(self.msg_handler, self.msg_handler.signal, self.event_handler)
+        self.msg_handler.start()
+        self.connector.register_listener(self.msg_handler)
+        self.log_signal = QtCore.SIGNAL('log(PyQt_PyObject)')
+        self.connect(self, self.log_signal, self.write_to_log)
+        self.map_height = 0
+        self.map_width = 0
+        self.FACTOR = 1.0
+        self.source = 'monitor'
+        self.batch_senders = []
+        self.batch_sender = None
 
     def event_handler(self, event):
+        # print event.type
         print "Not implemented"
         # raise NotImplementedError("Event handler not implemented!")
+
+    def write_to_log(self, content):
+        print "Not implement"
+
+    def log(self, who, content):
+        self.emit(self.log_signal, who + ": " + content)
 
     def send_msg(self, msg):
         self.connector.send_to_USRP(msg)
 
+    def send_batch(self, source, destination, job_list):
+        is_start = False
+        size = len(self.batch_senders)
+        for i in range(size):
+            if not self.batch_senders[i].isRunning():
+                self.batch_senders[i] = JobBatchSender(self, job_list, source, destination)
+                self.batch_senders[i].start()
+                is_start = True
+                break
+        if not is_start:
+            self.batch_sender = JobBatchSender(self, job_list, source, destination)
+            self.batch_senders.append(self.batch_sender)
+            self.batch_sender.start()
+
     def stop_self(self):
         self.connector.stop_self()
-        self.event_generator.stop_self()
+        self.msg_handler.stop_self()
 
-class EventGenerator(QtCore.QObject, Thread, ConnectorInterface):
-    event_signal = QtCore.pyqtSignal(object)
+    def register_event_listener(self, listener):
+        self.msg_handler.register_event_listener(listener)
+
+
+class EventListener:
 
     def __init__(self):
-        QtCore.QObject.__init__(self)
-        Thread.__init__(self)
+        pass
+
+    def event_handler(self, event):
+        raise NotImplementedError('Not implemented!')
+
+
+class MessageHandler(QtCore.QThread, ConnectorInterface):
+
+    def __init__(self):
+        QtCore.QThread.__init__(self)
+        self.signal = QtCore.SIGNAL('hand_event(PyQt_PyObject)')
         self.event_queue = Queue()
+        self.event_handler = None
         self.running = True
-        self.start()
 
     def msg_received(self, msg):
         self.event_queue.put(msg)
@@ -52,13 +98,15 @@ class EventGenerator(QtCore.QObject, Thread, ConnectorInterface):
             try:
                 event_obj = MessageCoder.decode(event_msg)
                 event = self.parse_event(event_obj)
-                self.event_signal.emit(event)
+                self.emit(self.signal, event)
             except ValueError, e:
+                pass
+            except KeyError, e:
                 pass
         print "Event handler is stopped!"
 
-    def connect_to_event_signal(self, function):
-        self.event_signal.connect(function)
+    def register_event_listener(self, listener):
+        self.event_handler = listener
 
     def stop_self(self):
         self.event_queue.put_nowait("QUIT")
@@ -81,25 +129,46 @@ class EventGenerator(QtCore.QObject, Thread, ConnectorInterface):
             event.set_origin_msg(event_obj)
             event.self_parse()
         elif event_obj["type"] == DSRC_Event.TYPE_CUSTOMIZED:
-            if self.customized_event:
-                # event = Plugin.customized_generate_event()
-                # event.set_origin_msg(event_obj)
-                # event.self_parse()
-                pass
+            # event = Plugin.customized_generate_event()
+            # event.set_origin_msg(event_obj)
+            # event.self_parse()
+            pass
 
         if event:
             event.source = event_obj['source']
             event.destination = event_obj['destination']
             event.type = event_obj['type']
-
         return event
 
-def event_handler(event):
-    print event.source
+
+class EventSimpleHandler(EventListener):
+
+    def __init__(self):
+        pass
+
+    def event_handler(self, event):
+        print "Not implement"
+
+
+class JobBatchSender(QtCore.QThread):
+    def __init__(self, context, job_list, source, destination):
+        QtCore.QThread.__init__(self)
+        self.job_list = job_list
+        self.context = context
+        self.source = source
+        self.destination = destination
+
+    def run(self):
+        for job in self.job_list:
+            msg = MessageCoder.generate_batch_processing(self.source, self.destination, job)
+            self.context.send_msg(msg)
+            time.sleep(0.1)
 
 
 def main():
     context = Context()
+    # context.register_event_listener(EventSimpleHandler())
+    # context.event_generator.connect_to_event_signal(event_handler)
     while True:
         a = raw_input("Enter:")
         if a == 'quit':
