@@ -23,7 +23,7 @@ class Console(QtGui.QMainWindow, Context, EventListener):
         self.register_event_listener(self)
         self.v_layout = QtGui.QVBoxLayout()
         self.v_layout.addStretch(1)
-        self.map = Map(context=self, parent=self, width=800, height=800)
+        self.map = Map(context=self, parent=self, width=400, height=400)
         self.logger = Logger(parent=self, context=self, width=800, height=200)
         self.v_layout.addWidget(self.map)
         self.v_layout.addWidget(self.logger)

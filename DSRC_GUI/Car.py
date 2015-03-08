@@ -145,6 +145,14 @@ class Car(QtGui.QWidget):
         self.context.send_msg(msg)
         self.context.log(self.name, 'To Free mode')
 
+    def to_customized(self):
+        msg = MessageCoder.generate_setting_message(source=self.context.source,
+                                                    destination=self.name,
+                                                    setting_name=DSRC_Event.SETTINGS_NAME_STYLE,
+                                                    value=DSRC_Event.SETTINGS_NAME_STYLE_CUSTOMIZED)
+        self.context.send_msg(msg)
+        self.context.log(self.name, 'To Customized mode')
+
     def to_safe_mode(self):
         msg = MessageCoder.generate_command_message(source=self.context.source,
                                                     destination=self.name,

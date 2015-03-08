@@ -28,7 +28,7 @@ class Context(QtCore.QObject):
         self.connect(self, self.log_signal, self.write_to_log)
         self.map_height = 0
         self.map_width = 0
-        self.FACTOR = 1.0
+        self.FACTOR = 2
         self.source = 'monitor'
         self.batch_senders = []
         self.batch_sender = None

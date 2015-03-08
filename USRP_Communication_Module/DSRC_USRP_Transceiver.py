@@ -35,8 +35,8 @@ class WifiTransceiver(gr.top_block):
         # Variables
         ##################################################
         self.tx_gain = tx_gain = 90
-        self.samp_rate = samp_rate = 10e6
-        self.rx_gain = rx_gain = 50
+        self.samp_rate = samp_rate = 2*10e5
+        self.rx_gain = rx_gain = 60
         self.mult = mult = 0.38
         self.lo_offset = lo_offset = 0
         self.freq = freq = 5.89e9
