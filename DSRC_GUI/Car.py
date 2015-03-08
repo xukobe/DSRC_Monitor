@@ -64,8 +64,12 @@ class Car(QtGui.QWidget):
         lead_action.connect(lead_action, QtCore.SIGNAL('triggered()'), self.to_lead)
         menu.addAction(lead_action)
 
-        follow_action = QtGui.QAction('Follow', self)
-        follow_action.connect(follow_action, QtCore.SIGNAL('triggered()'), self.to_follow)
+        customized_action = QtGui.QAction('Follow', self)
+        customized_action.connect(customized_action, QtCore.SIGNAL('triggered()'), self.to_follow)
+        menu.addAction(customized_action)
+
+        follow_action = QtGui.QAction('Customized receiver', self)
+        follow_action.connect(follow_action, QtCore.SIGNAL('triggered()'), self.to_customized)
         menu.addAction(follow_action)
 
         free_action = QtGui.QAction('Free', self)
