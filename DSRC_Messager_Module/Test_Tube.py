@@ -32,7 +32,7 @@ class TestTube:
 
     def _monitor_recv_callback(self, msg):
         # message = msg.replace("\n", "")
-        print "Monitor Received"
+        print msg
         if len(self.csc) > 0:
             for csc in self.csc:
                 try:
@@ -49,13 +49,20 @@ class TestTube:
 
     def _car_recv_callback(self, msg):
         # message = msg.replace("\n", "")
-        print "Client received"
+        print msg
         if self.msc:
             try:
                 self.msc.send(msg)
                 print "Send To Monitor"
             except Exception, e:
                 self.msc = None
+        if len(self.csc) > 0:
+            for csc in self.csc:
+                try:
+                    csc.send(msg)
+                    print "Send to Client"
+                except Exception, e:
+                    self.csc.remove(csc)
 
     def close(self):
         if len(self.csc) > 0:
