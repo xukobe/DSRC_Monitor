@@ -2,6 +2,7 @@ __author__ = 'xuepeng'
 
 from PyQt4 import QtGui, QtCore
 from Event_Module.DSRC_Message_Coder import DSRC_Event, MessageCoder
+import math
 
 
 class Sider(QtGui.QWidget):
@@ -11,8 +12,10 @@ class Sider(QtGui.QWidget):
         self.setFixedSize(200, 1000)
         self.v_layout = QtGui.QVBoxLayout()
         self.display = Display(self)
+        self.car_sider = CarSider(self)
         self.function_sider = FunctionSider(self)
         self.v_layout.addWidget(self.display)
+        self.v_layout.addWidget(self.car_sider)
         self.v_layout.addWidget(self.function_sider)
         self.setLayout(self.v_layout)
         self.current_car = None
@@ -24,6 +27,9 @@ class Sider(QtGui.QWidget):
         for plugin in car.plugins:
             function_widget = FunctionWidget(self.function_sider, plugin, self.context, car)
             self.function_sider.add_function(function_widget)
+
+    def add_car(self, car):
+        self.car_sider.add_car(car)
 
 
 class Display(QtGui.QLabel):
@@ -56,11 +62,69 @@ class Display(QtGui.QLabel):
         self.setText(self.display_content)
 
 
+class CarItem(QtGui.QWidget):
+    def __init__(self, parent, car, sider):
+        QtGui.QWidget.__init__(self, parent=parent)
+        self.car = car
+        self.sider = sider
+        self.icon = QtGui.QLabel()
+        self.icon.setParent(self)
+        if self.car.original_image:
+            degree_to_rotate = -90
+            transform = QtGui.QTransform()
+            transform.rotate(degree_to_rotate)
+            image = self.car.original_image.transformed(transform)
+            self.icon.setPixmap(image)
+        self.icon.setGeometry(0, 0, 120, 120)
+        self.text = QtGui.QLabel()
+        self.text.setParent(self)
+        self.text.setText(self.car.name)
+        self.text.setGeometry(0, 120, 120, 20)
+        self.text.setAlignment(QtCore.Qt.AlignCenter)
+        self.setFixedSize(120, 140)
+        self.setToolTip(self.car.name + ":" + str(self.car.coordinate))
+
+    def contextMenuEvent(self, e):
+        self.car.contextMenuEvent(e)
+
+    def mousePressEvent(self, e):
+        self.sider.set_car(self.car)
+
+
+class CarSider(QtGui.QScrollArea):
+    def __init__(self, parent):
+        QtGui.QScrollArea.__init__(self, parent)
+        self.sider = parent
+        self.car_list = {}
+        self.v_layout = QtGui.QVBoxLayout()
+        self.setFixedSize(190, 220)
+        self.inner_widget = QtGui.QWidget()
+        self.inner_widget.setLayout(self.v_layout)
+        self.setWidget(self.inner_widget)
+        self.setAlignment(QtCore.Qt.AlignCenter)
+        self.setWidgetResizable(True)
+        self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+
+    def add_car(self, car):
+        if car.name in self.car_list:
+            pass
+        else:
+            car_item = CarItem(self, car, self.sider)
+            self.car_list[car.name] = car_item
+            self.v_layout.addWidget(car_item)
+
+    def remove_car(self, car):
+        car_item = self.car_list.pop(car.name)
+        if car_item:
+            car_item.setParent(None)
+            # self.v_layout.removeWidget(car_item)
+
+
 class FunctionSider(QtGui.QScrollArea):
     def __init__(self, parent):
         QtGui.QScrollArea.__init__(self, parent)
         self.v_layout = QtGui.QVBoxLayout()
-        self.setFixedSize(190, 770)
+        self.setFixedSize(190, 550)
         # self.v_layout.addSpacing()
         # self.setLayout(self.v_layout)
         self.inner_widget = QtGui.QWidget()
@@ -69,15 +133,21 @@ class FunctionSider(QtGui.QScrollArea):
         self.setAlignment(QtCore.Qt.AlignCenter)
         self.setWidgetResizable(True)
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+        self.function_list = {}
 
     def add_function(self, function_widget):
-        function_widget.setParent(self)
-        self.v_layout.addWidget(function_widget)
+        if function_widget.name in self.function_list:
+            pass
+        else:
+            self.function_list[function_widget.name] = function_widget
+            function_widget.setParent(self)
+            self.v_layout.addWidget(function_widget)
 
     def remove_all(self):
         size = self.v_layout.count()
         for i in range(size):
             self.v_layout.itemAt(0).widget().setParent(None)
+        self.function_list.clear()
 
 
 class FunctionWidget(QtGui.QPushButton):

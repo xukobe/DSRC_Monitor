@@ -132,6 +132,7 @@ class Console(QtGui.QMainWindow, Context, EventListener):
                                               name=event.source,
                                               icon_path=Res_Manager.get_path("car.png"))
                 car = self.cars[event.source]
+                self.sider.add_car(car)
                 car.go(0, 0, 0)
             if event.type == DSRC_Event.TYPE_MONITOR_CAR:
                 if event.sub_type == DSRC_Event.SUBTYPE_CMD:

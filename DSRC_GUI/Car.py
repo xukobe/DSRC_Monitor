@@ -39,7 +39,8 @@ class Car(QtGui.QWidget):
         self.setVisible(True)
 
     def add_plugin(self, plugin):
-        self.plugins.append(plugin)
+        if plugin not in self.plugins:
+            self.plugins.append(plugin)
 
     def contextMenuEvent(self, e):
         menu = QtGui.QMenu(self)
