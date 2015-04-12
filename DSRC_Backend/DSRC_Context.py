@@ -14,6 +14,8 @@ from DSRC_Messager_Module.DSRC_USRP_Connector import DsrcUSRPConnector, Connecto
 from Event_Module.DSRC_Message_Coder import MessageCoder
 from PyQt4 import QtGui, QtCore
 
+RETX_TIMES = 5
+SENDING_INTERVAL = 0.1
 
 class Context(QtCore.QObject):
 
@@ -21,7 +23,11 @@ class Context(QtCore.QObject):
         super(Context, self).__init__()
         self.connector = DsrcUSRPConnector()
         self.msg_handler = MessageHandler()
+        self.sender = SendingHandler(self)
+        self.connect(self.sender, self.sender.signal, self.message_received_by_vehicle)
+        self.sender.start()
         self.connect(self.msg_handler, self.msg_handler.signal, self.event_handler)
+        self.connect(self.msg_handler, self.msg_handler.signal, self.sender.remove_ack)
         self.msg_handler.start()
         self.connector.register_listener(self.msg_handler)
         self.log_signal = QtCore.SIGNAL('log(PyQt_PyObject)')
@@ -38,6 +44,9 @@ class Context(QtCore.QObject):
         print "Not implemented"
         # raise NotImplementedError("Event handler not implemented!")
 
+    def message_received_by_vehicle(self, message):
+        print "Not implemented"
+
     def write_to_log(self, content):
         print "Not implement"
 
@@ -45,7 +54,9 @@ class Context(QtCore.QObject):
         self.emit(self.log_signal, who + ": " + content)
 
     def send_msg(self, msg):
-        self.connector.send_to_USRP(msg)
+        # m = MessageCoder.encode(msg)
+        # self.connector.send_to_USRP(m)
+        self.sender.send(msg)
 
     def send_batch(self, source, destination, job_list):
         is_start = False
@@ -62,11 +73,66 @@ class Context(QtCore.QObject):
             self.batch_sender.start()
 
     def stop_self(self):
+        self.sender.stop_self()
         self.connector.stop_self()
         self.msg_handler.stop_self()
 
     def register_event_listener(self, listener):
         self.msg_handler.register_event_listener(listener)
+
+
+class MessageItem:
+    def __init__(self, message, max_times, seq):
+        self.sequence = seq
+        self.message = message
+        self.times = 0
+        self.max_times = max_times
+
+
+class SendingHandler(QtCore.QThread):
+    def __init__(self, context):
+        QtCore.QThread.__init__(self)
+        self.signal = QtCore.SIGNAL('ack_event(PyQt_PyObject)')
+        self.sending_queue = Queue()
+        self.seq_to_remove = []
+        self.running = True
+        self.context = context
+        self.seq = 0
+
+    def send(self, msg_obj):
+        msg_obj['seq'] = self.seq
+        m_item = MessageItem(msg_obj, RETX_TIMES, self.seq)
+        self.seq += 2
+        self.sending_queue.put(m_item)
+
+    def remove_ack(self, event):
+        if event.type == DSRC_Event.TYPE_MONITOR_CAR:
+            if event.sub_type == DSRC_Event.SUBTYPE_ACK:
+                seq = event.seq - 1
+                self.seq_to_remove.append(seq)
+
+    def run(self):
+        while self.running:
+            m_item = self.sending_queue.get()
+            if m_item.sequence == -1:
+                break
+            elif m_item.sequence in self.seq_to_remove:
+                self.emit(self.signal, m_item.message)
+                continue
+            try:
+                msg = MessageCoder.encode(m_item.message)
+                self.context.connector.send_to_USRP(msg)
+                m_item.times += 1
+                if m_item.times >= m_item.max_times:
+                    self.seq_to_remove.append(m_item.sequence)
+                self.sending_queue.put(m_item)
+            except Exception, e:
+                self.context.log("Context", e.message)
+            time.sleep(SENDING_INTERVAL)
+
+
+    def stop_self(self):
+        self.sending_queue.put_nowait(MessageItem(None, 0, -1))
 
 
 class EventListener:

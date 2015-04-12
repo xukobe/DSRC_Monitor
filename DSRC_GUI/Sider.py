@@ -46,18 +46,32 @@ class Display(QtGui.QLabel):
         action = "Action:\t"
         arg1 = "Velocity:\t"
         arg2 = "Angular rate:\t"
-        if car.action:
-            action = action + car.action
-        if car.arg1:
+        mode = "Mode:\t"
+        interval = "Interval:"
+        if car.action != None:
+            action = action + str(car.action)
+
+        if car.arg1 != None:
             arg1 = arg1 + str(car.arg1)
-        if car.arg2:
+
+        if car.arg2 != None:
             arg2 = arg2 + str(car.arg2)
+
+        if car.mode != None:
+            mode = mode + str(car.mode)
+
+        if car.interval != None:
+            interval = interval + str(car.interval)
+
         self.display_content = name + '\n' + \
                                pos_x + '\n' + \
                                pos_y + '\n' + \
                                pos_radian + '\n' + \
                                action + '\n' + \
-                               arg1 + '\n' + arg2
+                               arg1 + '\n' + \
+                               arg2 + '\n' + \
+                               mode + '\n' + \
+                               interval
 
         self.setText(self.display_content)
 
@@ -89,6 +103,8 @@ class CarItem(QtGui.QWidget):
 
     def mousePressEvent(self, e):
         self.sider.set_car(self.car)
+        self.sider.car_sider.set_selected(self.car.name)
+
 
 
 class CarSider(QtGui.QScrollArea):
@@ -118,6 +134,12 @@ class CarSider(QtGui.QScrollArea):
         if car_item:
             car_item.setParent(None)
             # self.v_layout.removeWidget(car_item)
+
+    def set_selected(self, car_name):
+        for i in self.car_list:
+            if i != car_name:
+                self.car_list[i].car.set_selected(False)
+        self.car_list[car_name].car.set_selected(True)
 
 
 class FunctionSider(QtGui.QScrollArea):

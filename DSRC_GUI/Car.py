@@ -8,13 +8,17 @@ from Event_Module.DSRC_Message_Coder import MessageCoder, DSRC_Event
 from CarController import CarController
 from CarDialog import CarDialog
 
+MODE_FREE = "free"
+MODE_LEAD = "lead"
+MODE_FOLLOW = "follow"
+MODE_CUSTOMIZED = "customized"
 
 class Car(QtGui.QWidget):
     def __init__(self, context, parent, name, icon_path):
         QtGui.QWidget.__init__(self, parent=parent)
         self.context = context
         # x, y, radian
-        self.setFixedSize(120, 140)
+        self.setFixedSize(120, 150)
         self.coordinate = [0, 0, -1]
         self.name = name
         self.icon_path = icon_path
@@ -28,14 +32,19 @@ class Car(QtGui.QWidget):
             self.icon.setPixmap(self.original_image)
         self.text = QtGui.QLabel()
         self.text.setParent(self)
-        self.text.setText(self.name)
-        self.text.setGeometry(0, 0, 120, 20)
+        self.text.setText("<font color='Black' size='4'>" + self.name + "</font>")
+        self.text.setGeometry(0, 0, 120, 30)
         self.text.setAlignment(QtCore.Qt.AlignCenter)
         self.setToolTip(self.name + ":" + str(self.coordinate))
         self.action = None
         self.arg1 = None
         self.arg2 = None
+        self.mode = MODE_FREE
+        self.interval = None
         self.plugins = []
+        self.plugins.append("Collision avoidance")
+        self.plugins.append("Follow")
+
         self.setVisible(True)
 
     def add_plugin(self, plugin):
@@ -166,6 +175,8 @@ class Car(QtGui.QWidget):
                                                     value=DSRC_Event.SETTINGS_NAME_STYLE_FOLLOW)
         self.context.send_msg(msg)
         self.context.log(self.name, 'To Follow mode')
+
+        self.set_follow_target()
 
     def set_follow_target(self):
         text, ok = QtGui.QInputDialog.getText(self, 'Target to follow',
@@ -325,3 +336,9 @@ class Car(QtGui.QWidget):
                 self.context.send_msg(msg)
                 self.context.log(self.name, "Drag and drop from (" + str(self.coordinate[0]) + "," +
                                  str(self.coordinate[1]) + ") to (" + str(x) + str(y) + ").")
+
+    def set_selected(self, selected):
+        if selected:
+            self.text.setText("<font color='Red' size='5'>" + self.name + "</font>")
+        else:
+            self.text.setText("<font color='Black' size='4'>" + self.name + "</font>")

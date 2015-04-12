@@ -156,7 +156,7 @@ class Console(QtGui.QMainWindow, Context, EventListener):
         pos = e.pos()
         ex = pos.x()
         ey = pos.y()
-        selected = False
+        selected = None
         for i in self.cars:
             car = self.cars[i]
             car_pos = car.pos()
@@ -166,9 +166,13 @@ class Console(QtGui.QMainWindow, Context, EventListener):
             h = car.height()
             if x <= ex <= (x+w) and y <= ey <= (y+h):
                 self.current_car = car
-                selected = True
+                selected = i
         if selected:
             self.sider.set_car(self.current_car)
+            self.current_car.set_selected(True)
+            for i in self.cars:
+                if i != selected:
+                    self.cars[i].set_selected(False)
             self.log('Console', self.current_car.name + " selected!")
 
     def write_to_log(self, content):
