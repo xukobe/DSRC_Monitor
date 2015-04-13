@@ -41,6 +41,10 @@ class Car(QtGui.QWidget):
         self.arg2 = None
         self.mode = MODE_FREE
         self.interval = None
+        self.power = None
+        self.rate = None
+        self.bump = None
+        self.drop = None
         self.plugins = []
         self.plugins.append("Collision avoidance")
         self.plugins.append("Follow")

@@ -87,6 +87,7 @@ class MessageItem:
         self.message = message
         self.times = 0
         self.max_times = max_times
+        self.expired = False
 
 
 class SendingHandler(QtCore.QThread):
@@ -95,6 +96,7 @@ class SendingHandler(QtCore.QThread):
         self.signal = QtCore.SIGNAL('ack_event(PyQt_PyObject)')
         self.sending_queue = Queue()
         self.seq_to_remove = []
+        self.expired = []
         self.running = True
         self.context = context
         self.seq = 0
@@ -117,14 +119,18 @@ class SendingHandler(QtCore.QThread):
             if m_item.sequence == -1:
                 break
             elif m_item.sequence in self.seq_to_remove:
-                self.emit(self.signal, m_item.message)
+                self.emit(self.signal, m_item)
+                continue
+            elif m_item.sequence in self.expired:
+                m_item.expired = True
+                self.emit(self.signal, m_item)
                 continue
             try:
                 msg = MessageCoder.encode(m_item.message)
                 self.context.connector.send_to_USRP(msg)
                 m_item.times += 1
                 if m_item.times >= m_item.max_times:
-                    self.seq_to_remove.append(m_item.sequence)
+                    self.expired.append(m_item.sequence)
                 self.sending_queue.put(m_item)
             except Exception, e:
                 self.context.log("Context", e.message)

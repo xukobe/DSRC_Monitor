@@ -144,6 +144,8 @@ class Console(QtGui.QMainWindow, Context, EventListener):
                 coord = event.coordinates
                 action = event.action
                 self.log(car.name, "Update coordinates: " + str(coord.x) + ":" + str(coord.y) + ":" + str(coord.radian))
+                self.log(car.name, "Power:" + str(event.power) + " Rate:" + str(event.rate) + " Interval:" +
+                         str(event.interval) + " Bump:" + str(event.bump) + " Drop:" + str(event.drop))
                 if car.coordinate[0] != coord.x or car.coordinate[1] != coord.y or car.coordinate[2] != coord.radian:
                     # print "Move"
                     car.go(coord.x, coord.y, coord.radian)
@@ -151,6 +153,11 @@ class Console(QtGui.QMainWindow, Context, EventListener):
                 car.action = action.name
                 car.arg1 = action.arg1
                 car.arg2 = action.arg2
+                car.power = event.power
+                car.rate = event.rate
+                car.interval = event.interval
+                car.bump = event.bump
+                car.drop = event.drop
 
     def mousePressEvent(self, e):
         pos = e.pos()
