@@ -40,6 +40,7 @@ class Car(QtGui.QWidget):
         self.arg1 = None
         self.arg2 = None
         self.mode = MODE_FREE
+        self.follow_target = None
         self.interval = None
         self.power = None
         self.rate = None
@@ -154,6 +155,7 @@ class Car(QtGui.QWidget):
                                                     value=DSRC_Event.SETTINGS_NAME_STYLE_LEAD)
         self.context.send_msg(msg)
         self.context.log(self.name, 'To Lead mode')
+        self.mode = MODE_LEAD
 
     # def set_follow_target(self):
     #     text, ok = QtGui.QInputDialog.getText(self, 'Target to follow',
@@ -198,6 +200,8 @@ class Car(QtGui.QWidget):
                                                         args=value)
             self.context.send_msg(msg)
             self.context.log(self.name, 'To Follow mode, the target is ' + str(text))
+            self.mode = MODE_FOLLOW
+            self.follow_target = value
 
     def to_free(self):
         msg = MessageCoder.generate_setting_message(source=self.context.source,

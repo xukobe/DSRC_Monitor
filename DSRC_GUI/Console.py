@@ -12,10 +12,10 @@ from PyQt4 import QtGui, QtCore
 from Event_Module import DSRC_Event
 from DSRC_Backend.DSRC_Context import Context, EventListener
 from DSRC_Resources import DSRC_Resources_Manager as Res_Manager
-from Sider import Sider
+from Sider import Sider, SiderCallback
 
 
-class Console(QtGui.QMainWindow, Context, EventListener):
+class Console(QtGui.QMainWindow, Context, EventListener, SiderCallback):
     def __init__(self):
         QtGui.QMainWindow.__init__(self)
         Context.__init__(self)
@@ -29,6 +29,7 @@ class Console(QtGui.QMainWindow, Context, EventListener):
         self.v_layout.addWidget(self.logger)
         self.v_layout.setAlignment(QtCore.Qt.AlignLeft)
         self.sider = Sider(parent=self, context=self)
+        self.sider.callback = self
         self.main_layout = QtGui.QHBoxLayout()
         self.main_layout.addLayout(self.v_layout)
         self.main_layout.addWidget(self.sider)
@@ -135,6 +136,8 @@ class Console(QtGui.QMainWindow, Context, EventListener):
                 self.sider.add_car(car)
                 car.go(0, 0, 0)
             if event.type == DSRC_Event.TYPE_MONITOR_CAR:
+                # print event.type + ":" + event.sub_type + ":" + event.command.name
+                # print event.command.name
                 if event.sub_type == DSRC_Event.SUBTYPE_CMD:
                     if event.command.name == DSRC_Event.COMMAND_NAME_RESPONSE_PLUGIN:
                         args = event.command.args
@@ -143,9 +146,9 @@ class Console(QtGui.QMainWindow, Context, EventListener):
             elif event.type == DSRC_Event.TYPE_CAR_CAR:
                 coord = event.coordinates
                 action = event.action
-                self.log(car.name, "Update coordinates: " + str(coord.x) + ":" + str(coord.y) + ":" + str(coord.radian))
-                self.log(car.name, "Power:" + str(event.power) + " Rate:" + str(event.rate) + " Interval:" +
-                         str(event.interval) + " Bump:" + str(event.bump) + " Drop:" + str(event.drop))
+                # self.log(car.name, "Update coordinates: " + str(coord.x) + ":" + str(coord.y) + ":" + str(coord.radian))
+                # self.log(car.name, "Power:" + str(event.power) + " Rate:" + str(event.rate) + " Interval:" +
+                #          str(event.interval) + " Bump:" + str(event.bump) + " Drop:" + str(event.drop))
                 if car.coordinate[0] != coord.x or car.coordinate[1] != coord.y or car.coordinate[2] != coord.radian:
                     # print "Move"
                     car.go(coord.x, coord.y, coord.radian)
@@ -156,8 +159,24 @@ class Console(QtGui.QMainWindow, Context, EventListener):
                 car.power = event.power
                 car.rate = event.rate
                 car.interval = event.interval
+
+                if event.bump and not car.bump:
+                    car.bump = event.bump
+                    QtGui.QMessageBox.warning(self, "Warning", "Bump!")
+
+                if event.drop and not car.drop:
+                    car.drop = event.drop
+                    QtGui.QMessageBox.warning(self, "Warning", "Wheel drop!")
+
                 car.bump = event.bump
                 car.drop = event.drop
+
+
+    def message_received_by_vehicle(self, m_item):
+        self.log(self.current_car.name, "Message " + str(m_item.sequence) + " arrived!")
+
+    def car_set(self, car):
+        self.current_car = car
 
     def mousePressEvent(self, e):
         pos = e.pos()

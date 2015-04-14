@@ -71,9 +71,12 @@ class TestTube:
                     csc.stop_self()
                 except Exception, e:
                     self.csc.remove(csc)
-        self.msc.stop_self()
-        self.mss.stop_self()
-        self.css.stop_self()
+        if self.msc:
+            self.msc.stop_self()
+        if self.mss:
+            self.mss.stop_self()
+        if self.css:
+            self.css.stop_self()
 
 
 def main():

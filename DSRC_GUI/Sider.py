@@ -2,8 +2,16 @@ __author__ = 'xuepeng'
 
 from PyQt4 import QtGui, QtCore
 from Event_Module.DSRC_Message_Coder import DSRC_Event, MessageCoder
+import Car
 import math
 
+
+class SiderCallback:
+    def __init__(self):
+        pass
+
+    def car_set(self, car):
+        print "Not implemented"
 
 class Sider(QtGui.QWidget):
     def __init__(self, parent, context):
@@ -20,6 +28,7 @@ class Sider(QtGui.QWidget):
         self.setLayout(self.v_layout)
         self.current_car = None
         self.setVisible(True)
+        self.callback = None
 
     def set_car(self, car):
         self.display.dispaly_car(car)
@@ -27,6 +36,8 @@ class Sider(QtGui.QWidget):
         for plugin in car.plugins:
             function_widget = FunctionWidget(self.function_sider, plugin, self.context, car)
             self.function_sider.add_function(function_widget)
+        if self.callback:
+            self.callback.car_set(car)
 
     def add_car(self, car):
         self.car_sider.add_car(car)
@@ -47,6 +58,9 @@ class Display(QtGui.QLabel):
         arg1 = "Velocity:\t"
         arg2 = "Angular rate:\t"
         mode = "Mode:\t"
+        follow_target = ""
+        if car.mode == Car.MODE_FOLLOW and car.follow_target:
+            follow_target = "Target:" + car.follow_target
         interval = "Interval:"
         if car.action != None:
             action = action + str(car.action)
@@ -71,6 +85,7 @@ class Display(QtGui.QLabel):
                                arg1 + '\n' + \
                                arg2 + '\n' + \
                                mode + '\n' + \
+                               follow_target + '\n' + \
                                interval
 
         self.setText(self.display_content)

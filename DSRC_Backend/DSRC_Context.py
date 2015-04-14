@@ -44,7 +44,7 @@ class Context(QtCore.QObject):
         print "Not implemented"
         # raise NotImplementedError("Event handler not implemented!")
 
-    def message_received_by_vehicle(self, message):
+    def message_received_by_vehicle(self, m_item):
         print "Not implemented"
 
     def write_to_log(self, content):
