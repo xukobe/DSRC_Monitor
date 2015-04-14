@@ -46,8 +46,8 @@ class Car(QtGui.QWidget):
         self.bump = None
         self.drop = None
         self.plugins = []
-        self.plugins.append("Collision avoidance")
-        self.plugins.append("Follow")
+        # self.plugins.append("Collision avoidance")
+        # self.plugins.append("Follow")
 
         self.setVisible(True)
 
@@ -343,6 +343,6 @@ class Car(QtGui.QWidget):
 
     def set_selected(self, selected):
         if selected:
-            self.text.setText("<font color='Red' size='5'>" + self.name + "</font>")
+            self.text.setText("<font color='Green' size='5'>" + self.name + "</font>")
         else:
             self.text.setText("<font color='Black' size='4'>" + self.name + "</font>")

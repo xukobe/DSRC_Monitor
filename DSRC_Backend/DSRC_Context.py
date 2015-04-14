@@ -102,7 +102,7 @@ class SendingHandler(QtCore.QThread):
         self.seq = 0
 
     def send(self, msg_obj):
-        msg_obj['seq'] = self.seq
+        msg_obj[DSRC_Event.KEY_SEQUENCE] = self.seq
         m_item = MessageItem(msg_obj, RETX_TIMES, self.seq)
         self.seq += 2
         self.sending_queue.put(m_item)
@@ -192,24 +192,24 @@ class MessageHandler(QtCore.QThread, ConnectorInterface):
         """
         event = None
 
-        if event_obj["type"] == DSRC_Event.TYPE_CAR_CAR:
+        if event_obj[DSRC_Event.KEY_TYPE] == DSRC_Event.TYPE_CAR_CAR:
             event = DSRC_Event.Car_CarEvent()
             event.set_origin_msg(event_obj)
             event.self_parse()
-        elif event_obj["type"] == DSRC_Event.TYPE_MONITOR_CAR:
+        elif event_obj[DSRC_Event.KEY_TYPE] == DSRC_Event.TYPE_MONITOR_CAR:
             event = DSRC_Event.Monitor_CarEvent()
             event.set_origin_msg(event_obj)
             event.self_parse()
-        elif event_obj["type"] == DSRC_Event.TYPE_CUSTOMIZED:
+        elif event_obj[DSRC_Event.KEY_TYPE] == DSRC_Event.TYPE_CUSTOMIZED:
             # event = Plugin.customized_generate_event()
             # event.set_origin_msg(event_obj)
             # event.self_parse()
             pass
 
         if event:
-            event.source = event_obj['source']
-            event.destination = event_obj['destination']
-            event.type = event_obj['type']
+            event.source = event_obj[DSRC_Event.KEY_SOURCE]
+            event.destination = event_obj[DSRC_Event.KEY_DESTINATION]
+            event.type = event_obj[DSRC_Event.KEY_TYPE]
         return event
 
 
