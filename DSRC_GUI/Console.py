@@ -13,9 +13,12 @@ from Event_Module import DSRC_Event
 from DSRC_Backend.DSRC_Context import Context, EventListener
 from DSRC_Resources import DSRC_Resources_Manager as Res_Manager
 from Sider import Sider, SiderCallback
+from Chart import Chart, ChartListener
+from ExtensionWidget import ExtensionWindow, ExtensionItem
+from DSRC_GUI.GUI_Extension import DSRC_Plugin_Invoker as Extensions
 
 
-class Console(QtGui.QMainWindow, Context, EventListener, SiderCallback):
+class Console(QtGui.QMainWindow, Context, EventListener, SiderCallback, ChartListener):
     def __init__(self):
         QtGui.QMainWindow.__init__(self)
         Context.__init__(self)
@@ -36,6 +39,11 @@ class Console(QtGui.QMainWindow, Context, EventListener, SiderCallback):
         widget = QtGui.QWidget(self)
         widget.setLayout(self.main_layout)
         self.setCentralWidget(widget)
+
+        self.extensionWindow = ExtensionWindow(self)
+
+        self.chart_power = None
+        self.chart_rate = None
 
         self.cars = {}
         self.current_car = None
@@ -65,6 +73,13 @@ class Console(QtGui.QMainWindow, Context, EventListener, SiderCallback):
         self.setGeometry(300, 300, 1000, 1000)
         self.quick_tool = self.addToolBar('Tool')
         self.init_menu_and_tool_bar()
+        Extensions.load_plugin()
+        self.extensions = Extensions.plugins
+        for ext_name in self.extensions:
+            ext = self.extensions[ext_name]
+            ext_item = ExtensionItem(self, name=ext_name, function=ext.executor_module.execute, args=[self])
+            self.extensionWindow.add_extension(ext_item)
+
         self.show()
         # self.cars['car2'] = Car(context=self, parent=self.map, name='car2', icon_path=Res_Manager.get_path("car.png"))
         # car = self.cars['car2']
@@ -78,7 +93,9 @@ class Console(QtGui.QMainWindow, Context, EventListener, SiderCallback):
 
         file_menu = menu.addMenu('&File')
         help_menu = menu.addMenu('&Help')
+        tool_menu = menu.addMenu('&Tool')
 
+        # File menu
         quit_action = QtGui.QAction('Quit', self)
         quit_action.connect(quit_action, QtCore.SIGNAL('triggered()'), self.close)
 
@@ -88,17 +105,53 @@ class Console(QtGui.QMainWindow, Context, EventListener, SiderCallback):
         file_menu.addAction(quit_action)
         file_menu.addAction(save_action)
 
+        # Help menu
         about_action = QtGui.QAction('About', self)
         about_action.connect(about_action, QtCore.SIGNAL('triggered()'), self.about)
 
         help_menu.addAction(about_action)
 
+        # Tool menu
+        chart_menu = QtGui.QMenu(tool_menu)
+        chart_menu.setTitle('Charts')
+
+        tool_menu.addMenu(chart_menu)
+
+        power_action = QtGui.QAction('Power Chart', self)
+        power_action.connect(power_action, QtCore.SIGNAL('triggered()'), self.power_chart)
+
+        rate_action = QtGui.QAction('Rate Chart', self)
+        rate_action.connect(rate_action, QtCore.SIGNAL('triggered()'), self.rate_chart)
+
+        chart_menu.addAction(power_action)
+        chart_menu.addAction(rate_action)
+
+        extension_action = QtGui.QAction('Extensions', self)
+        extension_action.connect(extension_action, QtCore.SIGNAL('triggered()'), self.extensionWindow.show)
+
+        tool_menu.addAction(extension_action)
+
         self.quick_tool.addAction(quit_action)
         self.quick_tool.addAction(save_action)
         self.quick_tool.addAction(about_action)
+        self.quick_tool.addAction(power_action)
+        self.quick_tool.addAction(rate_action)
+        self.quick_tool.addAction(extension_action)
 
     def about(self):
         QtGui.QMessageBox.about(self, 'Smart Vehicle', self.info())
+
+    def power_chart(self):
+        if not self.chart_power:
+            self.chart_power = Chart(parent=self, name='Power', listener=self)
+            self.log('Console', "Power chart created!")
+            self.chart_power.show()
+
+    def rate_chart(self):
+        if not self.chart_rate:
+            self.chart_rate = Chart(parent=self, name='Rate', listener=self)
+            self.log('Console', "Rate chart created!")
+            self.chart_rate.show()
 
     def info(self):
         msg = "Author: Xuepeng Xu\n" + \
@@ -168,12 +221,17 @@ class Console(QtGui.QMainWindow, Context, EventListener, SiderCallback):
                     car.drop = event.drop
                     QtGui.QMessageBox.warning(self, "Warning", "Wheel drop!")
 
+                if self.chart_power:
+                    self.chart_power.addEntry(car.name, car.power)
+
+                if self.chart_rate:
+                    self.chart_rate.addEntry(car.name, car.rate)
+
                 car.bump = event.bump
                 car.drop = event.drop
 
-
     def message_received_by_vehicle(self, m_item):
-        self.log(self.current_car.name, "Message " + str(m_item.sequence) + " arrived!")
+        self.log("Console", "Message " + str(m_item.sequence) + " arrived!")
 
     def car_set(self, car):
         self.current_car = car
@@ -204,6 +262,21 @@ class Console(QtGui.QMainWindow, Context, EventListener, SiderCallback):
     def write_to_log(self, content):
         self.logger.append(str(content))
 
+    def chartClosed(self, chart):
+        if chart == self.chart_power:
+            self.chart_power = None
+            self.log('Console', "Power chart closed!")
+        elif chart == self.chart_rate:
+            self.chart_rate = None
+            self.log('Console', "Rate chart closed!")
+
+    def stop_self(self):
+        self.deleteLater()
+        if self.chart_power:
+            self.chart_power.stop_self()
+        if self.chart_rate:
+            self.chart_rate.stop_self()
+        Context.stop_self(self)
 
 def main():
     app = QtGui.QApplication(sys.argv)

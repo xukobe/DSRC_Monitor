@@ -88,11 +88,11 @@ class Car(QtGui.QWidget):
         menu.addAction(customized_action)
 
         follow_action = QtGui.QAction('To Follow Mode', self)
-        follow_action.connect(follow_action, QtCore.SIGNAL('triggered()'), self.to_follow)
+        follow_action.connect(follow_action, QtCore.SIGNAL('triggered()'), self.to_follow_prompt)
         menu.addAction(follow_action)
 
         set_follow_action = QtGui.QAction('Set follow target', self)
-        set_follow_action.connect(set_follow_action, QtCore.SIGNAL('triggered()'), self.set_follow_target)
+        set_follow_action.connect(set_follow_action, QtCore.SIGNAL('triggered()'), self.set_follow_target_prompt)
         menu.addAction(set_follow_action)
 
         safe_mode_action = QtGui.QAction('Set robot to safe mode', self)
@@ -104,7 +104,7 @@ class Car(QtGui.QWidget):
         menu.addAction(full_mode_action)
 
         set_pos_action = QtGui.QAction('Set pos', self)
-        set_pos_action.connect(set_pos_action, QtCore.SIGNAL('triggered()'), self.set_pos)
+        set_pos_action.connect(set_pos_action, QtCore.SIGNAL('triggered()'), self.set_pos_prompt)
         menu.addAction(set_pos_action)
 
         stop_action = QtGui.QAction('Stop', self)
@@ -181,10 +181,13 @@ class Car(QtGui.QWidget):
                                                     value=DSRC_Event.SETTINGS_NAME_STYLE_FOLLOW)
         self.context.send_msg(msg)
         self.context.log(self.name, 'To Follow mode')
+        self.mode = MODE_FOLLOW
 
-        self.set_follow_target()
+    def to_follow_prompt(self):
+        self.to_follow()
+        self.set_follow_target_prompt()
 
-    def set_follow_target(self):
+    def set_follow_target_prompt(self):
         text, ok = QtGui.QInputDialog.getText(self, 'Target to follow',
                                               'Enter car name:')
         if ok:
@@ -194,14 +197,25 @@ class Car(QtGui.QWidget):
             #                                             setting_name=DSRC_Event.SETTINGS_NAME_STYLE,
             #                                             value=DSRC_Event.SETTINGS_NAME_STYLE_FOLLOW)
             # self.context.send_msg(msg)
-            msg = MessageCoder.generate_command_message(source=self.context.source,
-                                                        destination=self.name,
-                                                        cmd=DSRC_Event.COMMAND_NAME_FOLLOW,
-                                                        args=value)
-            self.context.send_msg(msg)
-            self.context.log(self.name, 'To Follow mode, the target is ' + str(text))
-            self.mode = MODE_FOLLOW
-            self.follow_target = value
+            self.set_follow_target(value)
+            # msg = MessageCoder.generate_command_message(source=self.context.source,
+            #                                             destination=self.name,
+            #                                             cmd=DSRC_Event.COMMAND_NAME_FOLLOW,
+            #                                             args=value)
+            # self.context.send_msg(msg)
+            # self.context.log(self.name, 'To Follow mode, the target is ' + str(text))
+            # self.mode = MODE_FOLLOW
+            # self.follow_target = value
+
+    def set_follow_target(self, car_name):
+        msg = MessageCoder.generate_command_message(source=self.context.source,
+                                                    destination=self.name,
+                                                    cmd=DSRC_Event.COMMAND_NAME_FOLLOW,
+                                                    args=[car_name])
+        self.context.send_msg(msg)
+        self.context.log(self.name, 'To Follow mode, the target is ' + str(car_name))
+        self.mode = MODE_FOLLOW
+        self.follow_target = car_name
 
     def to_free(self):
         msg = MessageCoder.generate_setting_message(source=self.context.source,
@@ -235,7 +249,16 @@ class Car(QtGui.QWidget):
         self.context.send_msg(msg)
         self.context.log(self.name, 'To Full Mode')
 
-    def set_pos(self):
+    def use_plugin(self, plugin_name):
+        args = [plugin_name]
+        msg = MessageCoder.generate_command_message(self.context.source,
+                                                    self.name,
+                                                    DSRC_Event.COMMAND_NAME_PLUGIN,
+                                                    args)
+        self.context.send_msg(msg)
+        self.context.log(self.name, "Send Plugin " + self.name)
+
+    def set_pos_prompt(self):
         text, ok = QtGui.QInputDialog.getText(self, "Set pos (separate by ',')",
                                               'Enter x,y,radian:')
         if ok:
@@ -248,17 +271,27 @@ class Car(QtGui.QWidget):
                     y = int(pos[1])
                     degree = float(pos[2])
                     radian = degree/180 * math.pi
-                    args = [x, y, radian]
-                    msg = MessageCoder.generate_command_message(source=self.context.source,
-                                                                destination=self.name,
-                                                                cmd=DSRC_Event.COMMAND_NAME_SET_POS,
-                                                                args=args)
-                    self.context.send_msg(msg)
-                    self.context.log(self.name, "Set pos " + text)
+                    self.set_pos(x, y, radian)
+                    # args = [x, y, radian]
+                    # msg = MessageCoder.generate_command_message(source=self.context.source,
+                    #                                             destination=self.name,
+                    #                                             cmd=DSRC_Event.COMMAND_NAME_SET_POS,
+                    #                                             args=args)
+                    # self.context.send_msg(msg)
+                    # self.context.log(self.name, "Set pos " + text)
                 except ValueError, e:
                     QtGui.QMessageBox.warning(self, "Warning", "The input value is incorrect, "
                                                                "separate x,y and degree by ',', "
                                                                "for instance, (15,20,30.0)")
+
+    def set_pos(self, x, y, radian):
+        args = [x, y, radian]
+        msg = MessageCoder.generate_command_message(source=self.context.source,
+                                                    destination=self.name,
+                                                    cmd=DSRC_Event.COMMAND_NAME_SET_POS,
+                                                    args=args)
+        self.context.send_msg(msg)
+        self.context.log(self.name, "Set pos " + str(args))
 
     def stop(self):
         args = [0, 0]

@@ -198,10 +198,4 @@ class FunctionWidget(QtGui.QPushButton):
         self.connect(self, QtCore.SIGNAL('clicked()'), self.send_function)
 
     def send_function(self):
-        args = [self.name]
-        msg = MessageCoder.generate_command_message(self.context.source,
-                                                    self.car.name,
-                                                    DSRC_Event.COMMAND_NAME_PLUGIN,
-                                                    args)
-        self.context.send_msg(msg)
-        self.context.log(self.car.name, "Send Plugin " + self.name)
+        self.car.use_plugin(self.name)
