@@ -8,7 +8,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from multiprocessing import Process
 from DSRC_Messager_Module import Test_Tube
 from DSRC_GUI import Console
-from USRP_Communication_Module import DSRC_USRP_Transceiver
+# from USRP_Communication_Module import DSRC_USRP_Transceiver
 import time
 
 import signal
@@ -18,8 +18,8 @@ def test_tube():
     Test_Tube.main()
 
 
-def transceiver():
-    DSRC_USRP_Transceiver.main()
+# def transceiver():
+#     DSRC_USRP_Transceiver.main()
 
 
 def console():
@@ -34,7 +34,7 @@ if __name__ == '__main__':
         p1 = Process(target=test_tube, args=())
         p2 = Process(target=console, args=())
     elif args[1] == "stationary":
-        p1 = Process(target=transceiver, args=())
+        # p1 = Process(target=transceiver, args=())
         p2 = Process(target=console, args=())
     else:
         exit()
