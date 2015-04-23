@@ -5,6 +5,7 @@ import sys, os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 import math
+import time
 from Map import Map
 from Car import Car
 from Logger import Logger
@@ -158,6 +159,9 @@ class Console(QtGui.QMainWindow, Context, EventListener, SiderCallback, ChartLis
               "Organization: CPSLAB@McGill"
         return msg
 
+    def show_extensions(self):
+        self.extensionWindow.show()
+
     def closeEvent(self, event):
         quit_msg = "Are you sure you want to exit?"
         reply = QtGui.QMessageBox.question(self, 'Message',
@@ -278,7 +282,14 @@ class Console(QtGui.QMainWindow, Context, EventListener, SiderCallback, ChartLis
             self.chart_rate.stop_self()
         Context.stop_self(self)
 
+
 def main():
+    home = os.path.expanduser("~")
+    file_name = home+"/.DSRC_Server_Socket"
+    b = os.path.isfile(file_name)
+    while not b:
+        b = os.path.isfile(file_name)
+        time.sleep(0.1)
     app = QtGui.QApplication(sys.argv)
     console = Console()
     sys.exit(app.exec_())

@@ -9,6 +9,7 @@ import time
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
+import signal
 from DSRC_Messenger import SocketClient
 from DSRC_Messenger import SocketServer
 from Event_Module import DSRC_Message_Coder
@@ -79,13 +80,33 @@ class TestTube:
             self.css.stop_self()
 
 
+close_tube = False
+
+def signal_receiver(signum, stack):
+    print "Received " + str(signum)
+    global close_tube
+    close_tube = True
+
 def main():
+    global close_tube
+    close_tube = False
     tube = TestTube()
+    time.sleep(0.1)
+    home = os.path.expanduser("~")
+    file_name = home+'/.DSRC_Server_Socket'
+    f = open(file_name, 'w')
+    f.write("1")
+    f.close()
+    signal.signal(signal.SIGUSR1, signal_receiver)
     while True:
-        a = raw_input("Enter:")
-        if a == 'quit':
-            tube.close()
-            break
+        if close_tube:
+            os.remove(file_name)
+            try:
+                tube.close()
+            except Exception, e:
+                print "Bye!"
+            close_tube = False
+        time.sleep(0.5)
 
 if __name__ == '__main__':
     main()

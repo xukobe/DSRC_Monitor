@@ -6,7 +6,8 @@ from PyQt4 import QtCore, QtGui
 class ExtensionWindow(QtGui.QScrollArea):
     def __init__(self, parent):
         QtGui.QScrollArea.__init__(self, parent)
-        self.setWindowFlags(QtCore.Qt.Window)
+        self.setWindowFlags(QtCore.Qt.Window | QtCore.Qt.CustomizeWindowHint |
+                            QtCore.Qt.WindowTitleHint | QtCore.Qt.Tool | QtCore.Qt.WindowCloseButtonHint)
         self.v_layout = QtGui.QVBoxLayout()
         self.setFixedSize(200, 550)
         self.inner_widget = QtGui.QWidget()

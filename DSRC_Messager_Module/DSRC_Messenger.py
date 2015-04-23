@@ -89,6 +89,8 @@ class SocketServer(threading.Thread):
                 self.connected_callback(client_socket)
             except socket.timeout:
                 pass
+            except Exception, e:
+                pass
         print "Server is closed!"
 
     def stop_self(self):
