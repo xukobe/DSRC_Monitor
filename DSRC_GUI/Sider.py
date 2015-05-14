@@ -47,7 +47,7 @@ class Display(QtGui.QLabel):
     def __init__(self, parent):
         QtGui.QLabel.__init__(self, parent)
         self.display_content = None
-        self.setFixedSize(190, 220)
+        self.setFixedSize(190, 235)
 
     def dispaly_car(self, car):
         name = "Name:\t" + car.name
@@ -128,7 +128,7 @@ class CarSider(QtGui.QScrollArea):
         self.sider = parent
         self.car_list = {}
         self.v_layout = QtGui.QVBoxLayout()
-        self.setFixedSize(190, 220)
+        self.setFixedSize(190, 205)
         self.inner_widget = QtGui.QWidget()
         self.inner_widget.setLayout(self.v_layout)
         self.setWidget(self.inner_widget)

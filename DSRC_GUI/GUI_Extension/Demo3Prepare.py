@@ -27,14 +27,23 @@ def execute(console):
     # car2.use_plugin('lane')
     # time.sleep(0.1)
     # console.log('Demo1', 'Working')
-    cars[0].set_pos(200, 50, math.pi/2)
-    cars[1].set_pos(50, 200, 0)
+    # cars[0].set_pos(200, 50, math.pi/2)
+    # cars[1].set_pos(50, 200, 0)
 
-    cars[0].to_free()
-    cars[0].disable_plugin()
+    cars[0].to_customized()
+    cars[0].use_plugin('cross')
 
     cars[1].to_customized()
     cars[1].use_plugin('lane')
+
+    args0 = [200, 50, 90]
+    args1 = [50, 200, 0]
+
+    msg0 = generate_auto_set_up_message(console.source, cars[0].name, args0)
+    console.send_msg(msg0)
+
+    msg1 = generate_auto_set_up_message(console.source, cars[1].name, args1)
+    console.send_msg(msg1)
 
     # msg = generate_snakemove_message(console.source, cars[0].name, True)
     # console.send_msg(msg)
@@ -48,3 +57,16 @@ def generate_snakemove_message(source, destination, snakemove):
     msg_obj["do"] = snakemove
     # msg = MessageCoder.encode(msg_obj)
     return msg_obj
+
+def generate_auto_set_up_message(source, destination, args):
+    msg_obj = {}
+    msg_obj[DSRC_Event.KEY_SOURCE] = source
+    msg_obj[DSRC_Event.KEY_DESTINATION] = destination
+    msg_obj[DSRC_Event.KEY_TYPE] = DSRC_Event.TYPE_CUSTOMIZED
+    msg_obj[DSRC_Event.KEY_SUBTYPE] = "auto_setup"
+    msg_obj["x"] = args[0]
+    msg_obj["y"] = args[1]
+    msg_obj["r"] = args[2]
+    # msg = MessageCoder.encode(msg_obj)
+    return msg_obj
+

@@ -34,6 +34,7 @@ def generate_snakemove_message(source, destination, snakemove):
     msg_obj[DSRC_Event.KEY_SOURCE] = source
     msg_obj[DSRC_Event.KEY_DESTINATION] = destination
     msg_obj[DSRC_Event.KEY_TYPE] = DSRC_Event.TYPE_CUSTOMIZED
+    msg_obj[DSRC_Event.KEY_SUBTYPE] = 'snakemove'
     msg_obj["do"] = snakemove
     # msg = MessageCoder.encode(msg_obj)
     return msg_obj
