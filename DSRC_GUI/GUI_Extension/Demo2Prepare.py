@@ -73,8 +73,8 @@ def execute(console):
     cars[1].to_customized()
     cars[1].use_plugin('lane')
 
-    args0 = [100, 120, 90]
-    args1 = [50, 20, 90]
+    args0 = [120, 100, 0]
+    args1 = [20, 50, 0]
 
     msg0 = generate_auto_set_up_message(console.source, cars[0].name, args0)
     console.send_msg(msg0)
