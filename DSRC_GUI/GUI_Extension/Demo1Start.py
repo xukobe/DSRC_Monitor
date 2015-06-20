@@ -12,9 +12,9 @@ def execute(console):
     for car_name in console.cars:
         car = console.cars[car_name]
         cars.append(car)
-    console.log("Demo3", "Car number:" + str(len(cars)))
+    console.log("Demo1", "Car number:" + str(len(cars)))
     if len(cars) < 2:
-        console.log("Demo3", "At least two cars are needed!")
+        console.log("Demo1", "At least two cars are needed!")
         return
 
     # job = DSRC_Event.EventJob(DSRC_Event.ACTION_NAME_GO, 30, 0, 8)

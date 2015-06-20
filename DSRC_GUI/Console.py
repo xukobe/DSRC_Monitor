@@ -6,6 +6,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 import math
 import time
+import collections
 from Map import Map
 from Car import Car
 from Logger import Logger
@@ -75,7 +76,7 @@ class Console(QtGui.QMainWindow, Context, EventListener, SiderCallback, ChartLis
         self.quick_tool = self.addToolBar('Tool')
         self.init_menu_and_tool_bar()
         Extensions.load_plugin()
-        self.extensions = Extensions.plugins
+        self.extensions = collections.OrderedDict(sorted(Extensions.plugins.items()))
         for ext_name in self.extensions:
             ext = self.extensions[ext_name]
             ext_item = ExtensionItem(self, name=ext_name, function=ext.executor_module.execute, args=[self])
